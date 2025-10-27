@@ -1,0 +1,17 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Ignorar o arquivo que contém as senhas e tokens
+.env
+
+# Bônus: também é bom ignorar o cache do Python
+__pycache__/
+*.pyc
