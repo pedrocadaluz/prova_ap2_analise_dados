@@ -2,31 +2,36 @@ import requests
 import pandas as pd
 import os  
 from dotenv import load_dotenv  
+import numpy as np 
 
-
+# Carrega as variáveis de ambiente do .env
 load_dotenv()
-
-
 token = os.environ.get("MEU_TOKEN_API")
 headers = {'Authorization': 'Bearer {}'.format(token)}
+
+# --- API CALL (pesquisa/produto) ---
+# Esta parte não é usada no resto do script, mas mantida como no original
 response = requests.get('https://laboratoriodefinancas.com/api/v2/pesquisa/produto', headers=headers)
 dados = response.json()
-df = pd.DataFrame(dados)
+df_temp = pd.DataFrame(dados) # Renomeado para df_temp para clareza
 # 00 para Mundo e 18 para cacau
-df[df["cod2"].isin(["00", "18"])]
+df_temp[df_temp["cod2"].isin(["00", "18"])]
 
 
-#PARA  MUNDO E CACAU IMPORTED E EXPORTED
+# --- API CALL (pesquisa/operacao) ---
+# Este é o DataFrame principal 'df'
 params = {
-'id_produto': ('1365', '179')
+'id_produto': ('1365', '179') # 'Chocolate' e 'TOTAL'
 }
 
 api = 'https://laboratoriodefinancas.com/api/v2/pesquisa/operacao'
+print("Buscando dados da API... Isso pode demorar um pouco.")
 response = requests.get(api, params=params, headers=headers)
 dados = response.json()
 df = pd.DataFrame(dados)
+print("Dados recebidos.")
 
-
+# --- LISTAS DE FILTROS ---
 #países a serem utilizados 
 countries = [
     "World", 
@@ -54,102 +59,81 @@ periods = ['2020', '2021', '2022', '2023', '2024'] # anos a serem utilizados
 df = df[df["nome_pais"].isin(countries)]
 df_world = df[df["id_pais"]==1]
 
-
-
-
-
-
-
 '''
-DADOS DE EXPORTAÇÃO
-
+DADOS DE EXPORTAÇÃO (MUNDO)
 '''
-
 df_world_exported_chocolate = df_world[
-    (df_world["tipo_operacao"] == "Exported") &        
+    (df_world["tipo_operacao"] == "Exported") &       
     (df_world["descricao"] == "Chocolate and other food preparations containing cocoa") &
     (df_world["periodo"].isin(periods))
 ]
 
-
 #filtro para exportação total do mundo (todos os commodites)
 df_world_exported_total = df_world[
-    (df_world["tipo_operacao"] == "Exported") &        
+    (df_world["tipo_operacao"] == "Exported") &       
     (df_world["descricao"] == "TOTAL - All products") &
     (df_world["periodo"].isin(periods))
 ]
 
-
-
 '''
-DADOS DE IMPORTAÇÃO
-
+DADOS DE IMPORTAÇÃO (MUNDO)
 '''
-
 df_world_imported_chocolate = df_world[
-    (df_world["tipo_operacao"] == "Imported") &        
+    (df_world["tipo_operacao"] == "Imported") &       
     (df_world["descricao"] == "Chocolate and other food preparations containing cocoa") &
     (df_world["periodo"].isin(periods))
 ]
 
 #filtro para exportação total do mundo (todos os commodites)
 df_world_imported_total = df_world[
-    (df_world["tipo_operacao"] == "Imported") &        
+    (df_world["tipo_operacao"] == "Imported") &       
     (df_world["descricao"] == "TOTAL - All products") &
     (df_world["periodo"].isin(periods))
 ]
 
-
-
-
 ############################################### PAÍSES
 '''
-DADOS DE EXPORTAÇÃO
-
+DADOS DE EXPORTAÇÃO (PAÍSES)
 '''
-
-#países exported para cacau
+#países exported para chocolate
 df_paises_exported_chocolate = df[
-    (df["nome_pais"].isin(countries)) &                  
-    (df["tipo_operacao"]=="Exported") &             
-    (df["descricao"] == "Chocolate and other food preparations containing cocoa") &               
-    (df["periodo"].astype(str).isin(periods))           
+    (df["nome_pais"].isin(countries)) &               
+    (df["tipo_operacao"]=="Exported") &         
+    (df["descricao"] == "Chocolate and other food preparations containing cocoa") &           
+    (df["periodo"].astype(str).isin(periods))         
 ]
 
 #países exported para todas os commodites
 df_paises__exported_commodites = df[
-    (df["nome_pais"].isin(countries)) &                  
-    (df["tipo_operacao"]=="Exported") &             
-    (df["descricao"] == "TOTAL - All products") &               
-    (df["periodo"].astype(str).isin(periods))           
+    (df["nome_pais"].isin(countries)) &               
+    (df["tipo_operacao"]=="Exported") &         
+    (df["descricao"] == "TOTAL - All products") &           
+    (df["periodo"].astype(str).isin(periods))         
 ]
 
-
 '''
-DADOS DE IMPORTAÇÃO
-
+DADOS DE IMPORTAÇÃO (PAÍSES)
 '''
-
-#países imported para cacau
+#países imported para chocolate
 df_paises_imported_chocolate= df[
-    (df["nome_pais"].isin(countries)) &                  
-    (df["tipo_operacao"]=="Imported") &             
-    (df["descricao"] == "Chocolate and other food preparations containing cocoa") &               
-    (df["periodo"].astype(str).isin(periods))           
+    (df["nome_pais"].isin(countries)) &               
+    (df["tipo_operacao"]=="Imported") &         
+    (df["descricao"] == "Chocolate and other food preparations containing cocoa") &           
+    (df["periodo"].astype(str).isin(periods))         
 ]
 
 #países imported para todas os commodites
 df_paises__imported_commodites = df[
-    (df["nome_pais"].isin(countries)) &                  
-    (df["tipo_operacao"]=="Imported") &             
-    (df["descricao"] == "TOTAL - All products") &               
-    (df["periodo"].astype(str).isin(periods))           
+    (df["nome_pais"].isin(countries)) &               
+    (df["tipo_operacao"]=="Imported") &         
+    (df["descricao"] == "TOTAL - All products") &           
+    (df["periodo"].astype(str).isin(periods))         
 ]
 
 
-##################### ÍNDICES
-
-import numpy as np
+###############################################################
+# INÍCIO DO CÁLCULO DOS ÍNDICES
+###############################################################
 
 print("Iniciando o cálculo dos índices...")
 
@@ -159,8 +143,17 @@ print("Iniciando o cálculo dos índices...")
 def safe_to_numeric(series):
     return pd.to_numeric(series, errors='coerce')
 
+# Adiciona .copy() para evitar SettingWithCopyWarning
+df_world_exported_chocolate = df_world_exported_chocolate.copy()
+df_world_exported_total = df_world_exported_total.copy()
+df_paises_exported_chocolate = df_paises_exported_chocolate.copy()
+df_paises__exported_commodites = df_paises__exported_commodites.copy()
+df_paises_imported_chocolate = df_paises_imported_chocolate.copy()
+
+
 # Mundo
-df_paises_exported_chocolate['valor'] = safe_to_numeric(df_paises_exported_chocolate['valor'])
+# Esta era a (Correção 1): Faltava converter o df_world_exported_chocolate
+df_world_exported_chocolate['valor'] = safe_to_numeric(df_world_exported_chocolate['valor'])
 df_world_exported_total['valor'] = safe_to_numeric(df_world_exported_total['valor'])
 
 # Países - Exportação
@@ -170,25 +163,31 @@ df_paises__exported_commodites['valor'] = safe_to_numeric(df_paises__exported_co
 # Países - Importação
 df_paises_imported_chocolate['valor'] = safe_to_numeric(df_paises_imported_chocolate['valor'])
 
-# --- 2. CRIAÇÃO DOS COMPONENTES DE CÁLCULO ---
 
-# (X_ij) Exportações de Cacau por País (j) e Ano
+# --- 2. CRIAÇÃO DOS COMPONENTES DE CÁLCULO (CORRIGIDO) ---
+
+print("Criando componentes de cálculo...")
+
+# (X_ij) Exportações de Chocolate por País (j) e Ano
 X_ij = df_paises_exported_chocolate.set_index(['nome_pais', 'periodo'])['valor'].rename('X_ij')
 
 # (X_tj) Exportações Totais por País (j) e Ano
 X_tj = df_paises__exported_commodites.set_index(['nome_pais', 'periodo'])['valor'].rename('X_tj')
 
-# (M_ij) Importações de Cacau por País (j) e Ano
+# (M_ij) Importações de Chocolate por País (j) e Ano
 M_ij = df_paises_imported_chocolate.set_index(['nome_pais', 'periodo'])['valor'].rename('M_ij')
 
-# (X_iw) Exportações Mundiais de Cacau por Ano
-X_iw = df_paises_exported_chocolate.set_index('periodo')['valor'].rename('X_iw')
+# (X_iw) Exportações Mundiais de Chocolate por Ano
+# Esta era a (Correção 2): Usar o DataFrame do MUNDO, não dos países
+X_iw = df_world_exported_chocolate.set_index('periodo')['valor'].rename('X_iw')
 
 # (X_tw) Exportações Totais Mundiais por Ano
 X_tw = df_world_exported_total.set_index('periodo')['valor'].rename('X_tw')
 
 
 # --- 3. COMBINAÇÃO DOS DADOS ---
+
+print("Combinando DataFrames...")
 
 # Combina os dados dos países
 df_calc = pd.concat([X_ij, X_tj, M_ij], axis=1)
@@ -197,7 +196,7 @@ df_calc = pd.concat([X_ij, X_tj, M_ij], axis=1)
 df_calc = df_calc.reset_index().merge(X_iw, on='periodo').merge(X_tw, on='periodo')
 df_calc = df_calc.set_index(['nome_pais', 'periodo'])
 
-# Preenche valores NaN (países que podem não importar cacau, por ex.) com 0 para evitar erros
+# Preenche valores NaN (países que podem não importar, por ex.) com 0 para evitar erros
 df_calc = df_calc.fillna(0)
 
 # Remove "World" da lista de países para não calcular VCR para ele mesmo
@@ -206,11 +205,13 @@ df_calc = df_calc.drop(index='World', level='nome_pais', errors='ignore')
 
 # --- 4. CÁLCULO DOS ÍNDICES (VCR, VCRS, NEI) ---
 
+print("Calculando VCR, VCRS, NEI...")
+
 # VCR (Vantagem Comparativa Revelada)
 # VCR = (X_ij / X_tj) / (X_iw / X_tw)
-participacao_pais_no_cacau = df_calc['X_ij'] / df_calc['X_tj']
-participacao_mundo_no_cacau = df_calc['X_iw'] / df_calc['X_tw']
-df_calc['VCR'] = participacao_pais_no_cacau / participacao_mundo_no_cacau
+participacao_pais_no_chocolate = df_calc['X_ij'] / df_calc['X_tj']
+participacao_mundo_no_chocolate = df_calc['X_iw'] / df_calc['X_tw']
+df_calc['VCR'] = participacao_pais_no_chocolate / participacao_mundo_no_chocolate
 
 # VCRS (Vantagem Comparativa Revelada Simétrica)
 # VCRS = (VCR - 1) / (VCR + 1)
@@ -231,17 +232,14 @@ df_calc.replace([np.inf, -np.inf], np.nan, inplace=True)
 
 # --- 5. CÁLCULO DO CAGR (Taxa de Crescimento Anual Composta) ---
 
-# CAGR é calculado por país, usando 2020 e 2024
-print("\n--- Calculando CAGR (2020-2024) para Exportações de Cacau ---")
+print("\n--- Calculando CAGR (2020-2024) para Exportações de Chocolate ---")
 
-# Pivota os dados de exportação de cacau (X_ij)
+# Pivota os dados de exportação de chocolate (X_ij)
 df_pivot_cagr = X_ij.unstack('periodo')
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# ADICIONE ESTA LINHA DE DEBUG PARA VERIFICAR OS VALORES
+# [VERIFICAÇÃO] Valores de 2020 e 2024 usados pelo Python:
 print("\n[VERIFICAÇÃO] Valores de 2020 e 2024 usados pelo Python:")
 print(df_pivot_cagr[['2020', '2024']])
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 # Seleciona os anos inicial e final
@@ -250,18 +248,17 @@ valor_final = df_pivot_cagr['2024']
 anos = 2024 - 2020
 
 # Fórmula CAGR = ((Valor Final / Valor Inicial) ** (1 / N_Anos)) - 1
-cagr = ((valor_final / valor_inicial) ** (1 / anos)) - 1   
+cagr = ((valor_final / valor_inicial) ** (1 / anos)) - 1  
 cagr = cagr.rename('CAGR (2020-2024)').drop('World', errors='ignore')
 
 
 # --- 6. CÁLCULO DO IHH (Índice Herfindahl-Hirschman) ---
 
-# O IHH mede a concentração de mercado.
-# Vamos calcular a concentração dos países da sua amostra no mercado mundial de cacau.
-# O resultado será UM valor por ano (e não um por país).
 print("\n--- Calculando IHH (Concentração de Mercado) por Ano ---")
 
-# (s_j) Market Share de cada país (j) no mercado mundial de cacau (i)
+# (s_j) Market Share de cada país (j) no mercado mundial de chocolate (i)
+# X_ij = Exportação de Chocolate do País
+# X_iw = Exportação de Chocolate do Mundo (Corrigido)
 df_calc['market_share'] = (df_calc['X_ij'] / df_calc['X_iw'])
 
 # (s_j)^2 * 10000 (O IHH é geralmente apresentado na escala de 0 a 10.000)
