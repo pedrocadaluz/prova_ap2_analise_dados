@@ -4,22 +4,20 @@ import os
 from dotenv import load_dotenv  
 import numpy as np 
 
-# Carrega as variáveis de ambiente do .env
+
 load_dotenv()
 token = os.environ.get("MEU_TOKEN_API")
 headers = {'Authorization': 'Bearer {}'.format(token)}
 
 # --- API CALL (pesquisa/produto) ---
-# Esta parte não é usada no resto do script, mas mantida como no original
 response = requests.get('https://laboratoriodefinancas.com/api/v2/pesquisa/produto', headers=headers)
 dados = response.json()
-df_temp = pd.DataFrame(dados) # Renomeado para df_temp para clareza
+df = pd.DataFrame(dados) 
 # 00 para Mundo e 18 para cacau
-df_temp[df_temp["cod2"].isin(["00", "18"])]
+df[df["cod2"].isin(["00", "18"])]
 
 
 # --- API CALL (pesquisa/operacao) ---
-# Este é o DataFrame principal 'df'
 params = {
 'id_produto': ('1365', '179') # 'Chocolate' e 'TOTAL'
 }
@@ -31,7 +29,6 @@ dados = response.json()
 df = pd.DataFrame(dados)
 print("Dados recebidos.")
 
-# --- LISTAS DE FILTROS ---
 #países a serem utilizados 
 countries = [
     "World", 
@@ -54,7 +51,7 @@ countries = [
 
 periods = ['2020', '2021', '2022', '2023', '2024'] # anos a serem utilizados
 
-############################################################### MUNDO
+#--- MUNDO ---
 #filtros
 df = df[df["nome_pais"].isin(countries)]
 df_world = df[df["id_pais"]==1]
@@ -91,7 +88,7 @@ df_world_imported_total = df_world[
     (df_world["periodo"].isin(periods))
 ]
 
-############################################### PAÍSES
+# --- PAÍSES ---
 '''
 DADOS DE EXPORTAÇÃO (PAÍSES)
 '''
@@ -131,11 +128,8 @@ df_paises__imported_commodites = df[
 ]
 
 
-###############################################################
-# INÍCIO DO CÁLCULO DOS ÍNDICES
-###############################################################
+# --- CÁLCULOS DOS ÍNDICES ---
 
-print("Iniciando o cálculo dos índices...")
 
 # --- 1. PREPARAÇÃO DOS DADOS ---
 
@@ -152,7 +146,6 @@ df_paises_imported_chocolate = df_paises_imported_chocolate.copy()
 
 
 # Mundo
-# Esta era a (Correção 1): Faltava converter o df_world_exported_chocolate
 df_world_exported_chocolate['valor'] = safe_to_numeric(df_world_exported_chocolate['valor'])
 df_world_exported_total['valor'] = safe_to_numeric(df_world_exported_total['valor'])
 
@@ -164,9 +157,8 @@ df_paises__exported_commodites['valor'] = safe_to_numeric(df_paises__exported_co
 df_paises_imported_chocolate['valor'] = safe_to_numeric(df_paises_imported_chocolate['valor'])
 
 
-# --- 2. CRIAÇÃO DOS COMPONENTES DE CÁLCULO (CORRIGIDO) ---
+# --- 2. CRIAÇÃO DOS COMPONENTES DE CÁLCULO ---
 
-print("Criando componentes de cálculo...")
 
 # (X_ij) Exportações de Chocolate por País (j) e Ano
 X_ij = df_paises_exported_chocolate.set_index(['nome_pais', 'periodo'])['valor'].rename('X_ij')
@@ -187,7 +179,6 @@ X_tw = df_world_exported_total.set_index('periodo')['valor'].rename('X_tw')
 
 # --- 3. COMBINAÇÃO DOS DADOS ---
 
-print("Combinando DataFrames...")
 
 # Combina os dados dos países
 df_calc = pd.concat([X_ij, X_tj, M_ij], axis=1)
@@ -256,13 +247,8 @@ cagr = cagr.rename('CAGR (2020-2024)').drop('World', errors='ignore')
 
 print("\n--- Calculando IHH (Concentração de Mercado) por Ano ---")
 
-# (s_j) Market Share de cada país (j) no mercado mundial de chocolate (i)
-# X_ij = Exportação de Chocolate do País
-# X_iw = Exportação de Chocolate do Mundo (Corrigido)
-df_calc['market_share'] = (df_calc['X_ij'] / df_calc['X_iw'])
 
-# (s_j)^2 * 10000 (O IHH é geralmente apresentado na escala de 0 a 10.000)
-# Vamos usar a participação percentual ao quadrado: (share * 100)^2
+df_calc['market_share'] = (df_calc['X_ij'] / df_calc['X_iw'])
 df_calc['market_share_pct_sq'] = (df_calc['market_share'] * 100) ** 2
 
 # Soma os quadrados das participações de todos os países (exceto "World") por ano
@@ -294,3 +280,78 @@ print("="*50)
 print(ihh_por_ano)
 
 print("\n\nCálculos concluídos.")
+
+
+
+# --- 8. TRANSFORMANDO DADOS EM DF ---
+
+
+# --- DataFrame 'df_vcr' ---
+print("\n--- Criando DataFrame 'df_vcr' (Formato Pivotado) ---")
+# Seleciona a coluna VCR e pivota os períodos para colunas
+df_vcr = df_calc['VCR'].unstack('periodo')
+print(df_vcr)
+
+# --- DataFrame 'df_vcrs' ---
+print("\n--- Criando DataFrame 'df_vcrs' (Formato Pivotado) ---")
+# Seleciona a coluna VCRS e pivota os períodos para colunas
+df_vcrs = df_calc['VCRS'].unstack('periodo')
+print(df_vcrs)
+
+# --- DataFrame 'df_nei' ---
+print("\n--- Criando DataFrame 'df_nei' (Formato Pivotado) ---")
+# Seleciona a coluna NEI e pivota os períodos para colunas
+df_nei = df_calc['NEI'].unstack('periodo')
+print(df_nei)
+
+# --- DataFrame 'df_cagr' ---
+# 'cagr' é uma Series, convertemos para DataFrame
+print("\n--- DataFrame 'df_cagr' ---")
+df_cagr = cagr.to_frame()
+print(df_cagr)
+
+# --- DataFrame 'df_ihh' ---
+# 'ihh_por_ano' é uma Series, convertemos para DataFrame
+print("\n--- DataFrame 'df_ihh' ---")
+df_ihh = ihh_por_ano.to_frame()
+print(df_ihh)
+
+
+print("\n\nCálculos concluídos. Preparando para salvar em Excel...")
+
+
+# --- 9. SALVAR OS RESULTADOS EM ARQUIVO EXCEL ---
+
+# Define o nome do arquivo Excel de saída
+nome_arquivo_excel = "analise_indices_chocolate.xlsx"
+
+# Define um formato de string para alta precisão (15 casas decimais)
+formato_precisao_total = "%.5f"
+
+
+# Cria o "escritor" de Excel usando o context manager
+with pd.ExcelWriter(nome_arquivo_excel, engine='openpyxl') as writer:
+    
+    # Escreve cada DataFrame em uma aba (sheet) diferente
+    # Adicionamos o 'float_format' para evitar arredondamento VISUAL no Excel
+    
+    df_vcr.to_excel(writer, sheet_name='VCR', 
+                    float_format=formato_precisao_total)
+                    
+    df_vcrs.to_excel(writer, sheet_name='VCRS', 
+                     float_format=formato_precisao_total)
+                     
+    df_nei.to_excel(writer, sheet_name='NEI', 
+                    float_format=formato_precisao_total)
+                     
+    df_cagr.to_excel(writer, sheet_name='CAGR', 
+                     float_format=formato_precisao_total)
+                     
+    df_ihh.to_excel(writer, sheet_name='IHH', 
+                    float_format=formato_precisao_total)
+
+print("\n\n" + "="*50)
+print(f"SUCESSO! Os 5 DataFrames foram salvos em:")
+print(f"'{nome_arquivo_excel}'")
+print("Cada índice está em uma aba separada e com precisão total.")
+print("="*50)
