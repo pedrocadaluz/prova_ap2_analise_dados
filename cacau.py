@@ -338,12 +338,11 @@ print("\n\nCálculos concluídos. Preparando para salvar em Excel...")
 # Define o nome do arquivo Excel de saída
 nome_arquivo_excel = "analise_indices_cacau.xlsx"
 
-# Define um formato de string para alta precisão (15 casas decimais)
+# Define um formato de string para alta precisão 
 formato_precisao_total = "%.5f"
 
 
 # Cria o "escritor" de Excel usando o context manager
-# Se 'openpyxl' não estiver instalado, esta linha FALHARÁ
 with pd.ExcelWriter(nome_arquivo_excel, engine='openpyxl') as writer:
     
     # Escreve cada DataFrame em uma aba (sheet) diferente

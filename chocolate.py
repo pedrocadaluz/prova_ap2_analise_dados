@@ -325,7 +325,7 @@ print("\n\nCálculos concluídos. Preparando para salvar em Excel...")
 # Define o nome do arquivo Excel de saída
 nome_arquivo_excel = "analise_indices_chocolate.xlsx"
 
-# Define um formato de string para alta precisão (15 casas decimais)
+# Define um formato de string para alta precisão 
 formato_precisao_total = "%.5f"
 
 
