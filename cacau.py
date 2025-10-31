@@ -1,8 +1,8 @@
 import requests
 import pandas as pd
 import numpy as np
-import os  
-from dotenv import load_dotenv  
+import os
+from dotenv import load_dotenv
 load_dotenv()
 
 
@@ -15,7 +15,7 @@ df = pd.DataFrame(dados)
 df[df["cod2"].isin(["00", "18"])]
 
 
-#PARA  MUNDO E CACAU IMPORTED E EXPORTED
+#PARA MUNDO E CACAU IMPORTED E EXPORTED
 params = {
 'id_produto': ('173', '1365')
 }
@@ -33,22 +33,17 @@ countries = [
     "Ghana", "Ecuador", "Indonesia", "United Kingdom", "Switzerland"
 ]
 
-periods = ['2020', '2021', '2022', '2023', '2024'] # anos a serem utilizados
+#aumento da série histórica
+years = list(range(2015, 2025))
+periods = [str(years) for years in range(2015, 2025)]
+# periods = ['2020', '2021', '2022', '2023', '2024']
 
 # --- MUNDO ---
 
 #filtros
-df = df[df["nome_pais"].isin(countries)]
-df_world = df[df["id_pais"]==1]
+df = df[df["nome_pais"].isin(countries)].copy() # Adicionado .copy()
+df_world = df[df["id_pais"]==1].copy() # Adicionado .copy()
 
-
-
-
-df_world_exported_chocolate = df_world[
-    (df_world["tipo_operacao"] == "Exported") &        
-    (df_world["descricao"] == "Cocoa and cocoa preparations") &
-    (df_world["periodo"].isin(periods))
-]
 
 
 
@@ -58,17 +53,17 @@ DADOS DE EXPORTAÇÃO
 '''
 
 df_world_exported_cacau = df_world[
-    (df_world["tipo_operacao"] == "Exported") &        
+    (df_world["tipo_operacao"] == "Exported") &
     (df_world["descricao"] == "Cocoa and cocoa preparations") &
     (df_world["periodo"].isin(periods))
-]
+].copy() # Adicionado .copy()
 
 #filtro para exportação total do mundo (todos os commodites)
 df_world_exported_total = df_world[
-    (df_world["tipo_operacao"] == "Exported") &        
+    (df_world["tipo_operacao"] == "Exported") & 
     (df_world["descricao"] == "TOTAL - All products") &
     (df_world["periodo"].isin(periods))
-]
+].copy()
 
 
 
@@ -78,17 +73,17 @@ DADOS DE IMPORTAÇÃO
 '''
 
 df_world_imported_cacau = df_world[
-    (df_world["tipo_operacao"] == "Imported") &        
+    (df_world["tipo_operacao"] == "Imported") & 
     (df_world["descricao"] == "Cocoa and cocoa preparations") &
     (df_world["periodo"].isin(periods))
-]
+].copy() # Adicionado .copy()
 
 #filtro para exportação total do mundo (todos os commodites)
 df_world_imported_total = df_world[
-    (df_world["tipo_operacao"] == "Imported") &        
+    (df_world["tipo_operacao"] == "Imported") &
     (df_world["descricao"] == "TOTAL - All products") &
     (df_world["periodo"].isin(periods))
-]
+].copy()
 
 
 
@@ -102,19 +97,19 @@ DADOS DE EXPORTAÇÃO
 
 #países exported para cacau
 df_paises_exported_cacau = df[
-    (df["nome_pais"].isin(countries)) &                  
-    (df["tipo_operacao"]=="Exported") &             
-    (df["descricao"] == "Cocoa and cocoa preparations") &               
-    (df["periodo"].astype(str).isin(periods))           
-]
+    (df["nome_pais"].isin(countries)) & 
+    (df["tipo_operacao"]=="Exported") & 
+    (df["descricao"] == "Cocoa and cocoa preparations") & 
+    (df["periodo"].astype(str).isin(periods)) 
+].copy() # Adicionado .copy()
 
 #países exported para todas os commodites
 df_paises__exported_commodites = df[
-    (df["nome_pais"].isin(countries)) &                  
-    (df["tipo_operacao"]=="Exported") &             
-    (df["descricao"] == "TOTAL - All products") &               
-    (df["periodo"].astype(str).isin(periods))           
-]
+    (df["nome_pais"].isin(countries)) & 
+    (df["tipo_operacao"]=="Exported") & 
+    (df["descricao"] == "TOTAL - All products") &   
+    (df["periodo"].astype(str).isin(periods)) 
+].copy() # Adicionado .copy()
 
 
 '''
@@ -124,19 +119,19 @@ DADOS DE IMPORTAÇÃO
 
 #países imported para cacau
 df_paises_imported_cacau = df[
-    (df["nome_pais"].isin(countries)) &                  
-    (df["tipo_operacao"]=="Imported") &             
-    (df["descricao"] == "Cocoa and cocoa preparations") &               
-    (df["periodo"].astype(str).isin(periods))           
-]
+    (df["nome_pais"].isin(countries)) & 
+    (df["tipo_operacao"]=="Imported") &  
+    (df["descricao"] == "Cocoa and cocoa preparations") &   
+    (df["periodo"].astype(str).isin(periods)) 
+].copy() # Adicionado .copy()
 
 #países imported para todas os commodites
 df_paises__imported_commodites = df[
-    (df["nome_pais"].isin(countries)) &                  
-    (df["tipo_operacao"]=="Imported") &             
-    (df["descricao"] == "TOTAL - All products") &               
-    (df["periodo"].astype(str).isin(periods))           
-]
+    (df["nome_pais"].isin(countries)) & 
+    (df["tipo_operacao"]=="Imported") &  
+    (df["descricao"] == "TOTAL - All products") &   
+    (df["periodo"].astype(str).isin(periods)) 
+].copy() # Adicionado .copy()
 
 
 # ---ÍNDICES ---
@@ -148,50 +143,56 @@ df_paises__imported_commodites = df[
 def safe_to_numeric(series):
     return pd.to_numeric(series, errors='coerce')
 
-# Mundo
-df_world_exported_cacau['valor'] = safe_to_numeric(df_world_exported_cacau['valor'])
-df_world_exported_total['valor'] = safe_to_numeric(df_world_exported_total['valor'])
+# Aplica a função safe_to_numeric usando .loc para evitar SettingWithCopyWarning
+df_world_exported_cacau.loc[:, 'valor'] = safe_to_numeric(df_world_exported_cacau['valor'])
+df_world_exported_total.loc[:, 'valor'] = safe_to_numeric(df_world_exported_total['valor'])
 
-# Países - Exportação
-df_paises_exported_cacau['valor'] = safe_to_numeric(df_paises_exported_cacau['valor'])
-df_paises__exported_commodites['valor'] = safe_to_numeric(df_paises__exported_commodites['valor'])
+df_paises_exported_cacau.loc[:, 'valor'] = safe_to_numeric(df_paises_exported_cacau['valor'])
+df_paises__exported_commodites.loc[:, 'valor'] = safe_to_numeric(df_paises__exported_commodites['valor'])
 
-# Países - Importação
-df_paises_imported_cacau['valor'] = safe_to_numeric(df_paises_imported_cacau['valor'])
+df_paises_imported_cacau.loc[:, 'valor'] = safe_to_numeric(df_paises_imported_cacau['valor'])
 
 # --- 2. CRIAÇÃO DOS COMPONENTES DE CÁLCULO ---
 
 
 
-# (X_ij) Exportações de Cacau por País (j) e Ano
-X_ij = df_paises_exported_cacau.set_index(['nome_pais', 'periodo'])['valor'].rename('X_ij')
+# (export_cacau_pelo_pais) Exportações de Cacau por País (j) e Ano
+export_cacau_pelo_pais = df_paises_exported_cacau.set_index(['nome_pais', 'periodo'])['valor'].rename('export_cacau_pelo_pais')
 
 
-# (X_tj) Exportações Totais por País (j) e Ano
-X_tj = df_paises__exported_commodites.set_index(['nome_pais', 'periodo'])['valor'].rename('X_tj')
+# (export_totais_pelo_pais) Exportações Totais por País (j) e Ano
+export_totais_pelo_pais = df_paises__exported_commodites.set_index(['nome_pais', 'periodo'])['valor'].rename('export_totais_pelo_pais')
 
 
-# (M_ij) Importações de Cacau por País (j) e Ano
-M_ij = df_paises_imported_cacau.set_index(['nome_pais', 'periodo'])['valor'].rename('M_ij')
+# (import_cacau_pelo_pais) Importações de Cacau por País (j) e Ano
+import_cacau_pelo_pais = df_paises_imported_cacau.set_index(['nome_pais', 'periodo'])['valor'].rename('import_cacau_pelo_pais')
 
 
-# (X_iw) Exportações Mundiais de Cacau por Ano
-X_iw = df_world_exported_cacau.set_index('periodo')['valor'].rename('X_iw')
+# (export_cacau_mundial) Exportações Mundiais de Cacau por Ano
+export_cacau_mundial = df_world_exported_cacau.set_index('periodo')['valor'].rename('export_cacau_mundial')
 
 
-# (X_tw) Exportações Totais Mundiais por Ano
-X_tw = df_world_exported_total.set_index('periodo')['valor'].rename('X_tw')
+# (export_total_mundial) Exportações Totais Mundiais por Ano
+export_total_mundial = df_world_exported_total.set_index('periodo')['valor'].rename('export_total_mundial')
+
+# [NOVO COMPONENTE] (import_cacau_mundial) Importações Mundiais de Cacau por Ano
+import_cacau_mundial = df_world_imported_cacau.set_index('periodo')['valor'].rename('import_cacau_mundial')
 
 
 # --- 3. COMBINAÇÃO DOS DADOS ---
 
 
 
-# Combina os dados dos países
-df_calc = pd.concat([X_ij, X_tj, M_ij], axis=1)
+# Combina os dados dos países (Exportação e Importação por País)
+df_calc = pd.concat([export_cacau_pelo_pais, export_totais_pelo_pais, import_cacau_pelo_pais], axis=1)
 
 # Adiciona os dados mundiais, fazendo o merge pelo 'periodo'
-df_calc = df_calc.reset_index().merge(X_iw, on='periodo').merge(X_tw, on='periodo')
+df_calc = (
+    df_calc.reset_index()
+    .merge(export_cacau_mundial, on='periodo')
+    .merge(export_total_mundial, on='periodo')
+    .merge(import_cacau_mundial, on='periodo') # <--- CORRIGIDO: O merge que faltava
+)
 df_calc = df_calc.set_index(['nome_pais', 'periodo'])
 
 
@@ -210,9 +211,9 @@ df_calc = df_calc.drop(index='World', level='nome_pais', errors='ignore')
 
 
 # VCR (Vantagem Comparativa Revelada)
-# VCR = (X_ij / X_tj) / (X_iw / X_tw)
-participacao_pais_no_cacau = df_calc['X_ij'] / df_calc['X_tj']
-participacao_mundo_no_cacau = df_calc['X_iw'] / df_calc['X_tw']
+# VCR = (export_cacau_pelo_pais / export_totais_pelo_pais) / (export_cacau_mundial / export_total_mundial)
+participacao_pais_no_cacau = df_calc['export_cacau_pelo_pais'] / df_calc['export_totais_pelo_pais']
+participacao_mundo_no_cacau = df_calc['export_cacau_mundial'] / df_calc['export_total_mundial']
 df_calc['VCR'] = participacao_pais_no_cacau / participacao_mundo_no_cacau
 
 # VCRS (Vantagem Comparativa Revelada Simétrica)
@@ -220,15 +221,15 @@ df_calc['VCR'] = participacao_pais_no_cacau / participacao_mundo_no_cacau
 df_calc['VCRS'] = (df_calc['VCR'] - 1) / (df_calc['VCR'] + 1)
 
 # NEI (Índice de Exportação Líquida)
-# NEI = (X_ij - M_ij) / (X_ij + M_ij)
+# NEI = (export_cacau_pelo_pais - import_cacau_pelo_pais) / (export_cacau_pelo_pais + import_cacau_pelo_pais)
 # Usamos np.where para evitar divisão por zero se X+M == 0
 df_calc['NEI'] = np.where(
-    (df_calc['X_ij'] + df_calc['M_ij']) == 0, 
+    (df_calc['export_cacau_pelo_pais'] + df_calc['import_cacau_pelo_pais']) == 0, 
     0, 
-    (df_calc['X_ij'] - df_calc['M_ij']) / (df_calc['X_ij'] + df_calc['M_ij'])
+    (df_calc['export_cacau_pelo_pais'] - df_calc['import_cacau_pelo_pais']) / (df_calc['export_cacau_pelo_pais'] + df_calc['import_cacau_pelo_pais'])
 )
 
-# Substitui valores infinitos (caso X_tj ou X_tw sejam 0) por NaN
+# Substitui valores infinitos (caso export_totais_pelo_pais ou export_total_mundial sejam 0) por NaN
 df_calc.replace([np.inf, -np.inf], np.nan, inplace=True)
 
 
@@ -236,44 +237,78 @@ df_calc.replace([np.inf, -np.inf], np.nan, inplace=True)
 
 # --- 5. CÁLCULO DO CAGR (Taxa de Crescimento Anual Composta) ---
 
-# CAGR é calculado por país, usando 2020 e 2024
-# Pivota os dados de exportação de cacau (X_ij)
-df_pivot_cagr = X_ij.unstack('periodo')
+# Pivota os dados de exportação de cacau (export_cacau_pelo_pais)
+df_pivot_cagr = export_cacau_pelo_pais.unstack('periodo')
 
 
 # Seleciona os anos inicial e final
-valor_inicial = df_pivot_cagr['2020']
+valor_inicial = df_pivot_cagr['2015']
 valor_final = df_pivot_cagr['2024']
-anos = 2024 - 2020
+anos = 2024 - 2015
 
-# Fórmula CAGR = ((Valor Final / Valor Inicial) ** (1 / N_Anos)) - 1
-cagr = ((valor_final / valor_inicial) ** (1 / anos)) - 1   
-cagr = cagr.rename('CAGR (2020-2024)').drop('World', errors='ignore')
+# Fórmula CAGR: ((Valor Final / Valor Inicial) ** (1 / N_Anos)) - 1
+# Usamos np.where para definir CAGR como NaN se o valor inicial for 0.
+cagr = np.where(
+    valor_inicial == 0,
+    np.nan, 
+    ((valor_final / valor_inicial) ** (1 / anos)) - 1
+)
+cagr = pd.Series(cagr, index=valor_inicial.index) # Converte de volta para Series
+cagr = cagr.rename('CAGR (2015-2024)').drop('World', errors='ignore')
 
 
 # --- 6. CÁLCULO DO IHH (Índice Herfindahl-Hirschman) ---
 
-# O IHH mede a concentração de mercado.
-# Vamos calcular a concentração dos países da sua amostra no mercado mundial de cacau.
-
-
+# --- IHH para EXPORTADORES ---
 # (s_j) Market Share de cada país (j) no mercado mundial de cacau (i)
-df_calc['market_share'] = (df_calc['X_ij'] / df_calc['X_iw'])
+df_calc['market_share_export'] = (df_calc['export_cacau_pelo_pais'] / df_calc['export_cacau_mundial'])
 
-# (s_j)^2 * 10000 (O IHH é geralmente apresentado na escala de 0 a 10.000)
-# Vamos usar a participação percentual ao quadrado: (share * 100)^2
-df_calc['market_share_pct_sq'] = (df_calc['market_share'] * 100) ** 2
+# (s_j)^2 * 10000 (IHH para Exportadores por País/Ano)
+df_calc['IHH_EXPORTADORES_CONTRIBUICAO'] = (df_calc['market_share_export'] * 100) ** 2
 
-# Soma os quadrados das participações de todos os países (exceto "World") por ano
-ihh_por_ano = df_calc.groupby('periodo')['market_share_pct_sq'].sum().rename('IHH')
+# IHH Anual Total para Exportadores (Soma das Contribuições)
+ihh_exportadores_por_ano = df_calc.groupby('periodo')['IHH_EXPORTADORES_CONTRIBUICAO'].sum().rename('IHH_TOTAL_EXPORTADORES')
+
+# --- IHH para IMPORTADORES ---
+# Participação de Mercado dos Importadores
+df_calc['market_share_import'] = (df_calc['import_cacau_pelo_pais'] / df_calc['import_cacau_mundial'])
+
+# (s_j)^2 * 10000 (IHH para Importadores por País/Ano)
+df_calc['IHH_IMPORTADORES_CONTRIBUICAO'] = (df_calc['market_share_import'] * 100) ** 2
+
+# IHH Anual Total para Importadores (Soma das Contribuições)
+ihh_importadores_por_ano = df_calc.groupby('periodo')['IHH_IMPORTADORES_CONTRIBUICAO'].sum().rename('IHH_TOTAL_IMPORTADORES')
+
+
+# --- IHH Total do Período (Soma das Contribuições por País) ---
+
+# Soma a contribuição do IHH de cada país ao longo de todos os anos (2015-2024)
+ihh_total_periodo_export = (
+    df_calc['IHH_EXPORTADORES_CONTRIBUICAO']
+    .groupby('nome_pais').sum()
+    .rename('IHH_SOMA_PERIODO_EXPORT')
+)
+
+ihh_total_periodo_import = (
+    df_calc['IHH_IMPORTADORES_CONTRIBUICAO']
+    .groupby('nome_pais').sum()
+    .rename('IHH_SOMA_PERIODO_IMPORT')
+)
 
 
 # --- 7. EXIBIÇÃO DOS RESULTADOS ---
 
+print("\n\n" + "="*70)
+print("RESULTADOS - IHH TOTAL DO PERÍODO (Soma da Contribuição por País, 2015-2024)")
+print("="*70)
+print(ihh_total_periodo_export.to_frame())
+print("-" * 35)
+print(ihh_total_periodo_import.to_frame())
+print("="*70)
 
-
+print("\n\n" + "="*70)
 print("RESULTADOS - Índices Anuais por País (VCR, VCRS, NEI)")
-# Usamos o 'unstack' para facilitar a visualização
+print("="*70)
 try:
     print(df_calc[['VCR', 'VCRS', 'NEI']].unstack('periodo'))
 except Exception as e:
@@ -281,53 +316,59 @@ except Exception as e:
     print(df_calc[['VCR', 'VCRS', 'NEI']])
 
 
-
-print("RESULTADO - CAGR (2020-2024) por País")
+print("\n\n" + "="*70)
+print("RESULTADO - CAGR (2015-2024) por País")
+print("="*70)
 print(cagr)
 
+print("\n\n" + "="*70)
+print("RESULTADOS - Contribuição IHH EXPORTADORES por País e Ano (s_j^2 * 100^2)")
+print("="*70)
+try:
+    print(df_calc['IHH_EXPORTADORES_CONTRIBUICAO'].unstack('periodo'))
+except Exception as e:
+    print(f"Não foi possível pivotar a tabela. Exibindo formato longo:\n{e}\n")
+    print(df_calc['IHH_EXPORTADORES_CONTRIBUICAO'])
 
+print("\n\n" + "="*70)
+print("RESULTADOS - Contribuição IHH IMPORTADORES por País e Ano (s_j^2 * 100^2)")
+print("="*70)
+try:
+    print(df_calc['IHH_IMPORTADORES_CONTRIBUICAO'].unstack('periodo'))
+except Exception as e:
+    print(f"Não foi possível pivotar a tabela. Exibindo formato longo:\n{e}\n")
+    print(df_calc['IHH_IMPORTADORES_CONTRIBUICAO'])
 
-print("RESULTADO - IHH (Concentração de Mercado) por Ano")
-print(ihh_por_ano)
+print("\n\n" + "="*70)
+print("RESULTADO - IHH TOTAL ANUAL (Soma da Concentração de Mercado) por Ano")
+print("="*70)
+print(ihh_exportadores_por_ano.to_frame())
+print("-" * 70)
+print(ihh_importadores_por_ano.to_frame())
+print("="*70)
 
 print("\n\nCálculos concluídos.")
 
+
 # --- 8. TRANSFORMANDO DADOS EM DF ---
 
-
-print("\n\n" + "="*50)
-print("Processando resultados para salvar em DataFrames SEPARADOS...")
-print("="*50)
-
-# --- DataFrame 'df_vcr' ---
-print("\n--- Criando DataFrame 'df_vcr' (Formato Pivotado) ---")
-# Seleciona a coluna VCR e pivota os períodos para colunas
+# ... (df_vcr, df_vcrs, df_nei, df_cagr) ...
 df_vcr = df_calc['VCR'].unstack('periodo')
-print(df_vcr)
-
-# --- DataFrame 'df_vcrs' ---
-print("\n--- Criando DataFrame 'df_vcrs' (Formato Pivotado) ---")
-# Seleciona a coluna VCRS e pivota os períodos para colunas
 df_vcrs = df_calc['VCRS'].unstack('periodo')
-print(df_vcrs)
-
-# --- DataFrame 'df_nei' ---
-print("\n--- Criando DataFrame 'df_nei' (Formato Pivotado) ---")
-# Seleciona a coluna NEI e pivota os períodos para colunas
 df_nei = df_calc['NEI'].unstack('periodo')
-print(df_nei)
-
-# --- DataFrame 'df_cagr' ---
-# 'cagr' é uma Series, convertemos para DataFrame
-print("\n--- DataFrame 'df_cagr' ---")
 df_cagr = cagr.to_frame()
-print(df_cagr)
 
-# --- DataFrame 'df_ihh' ---
-# 'ihh_por_ano' é uma Series, convertemos para DataFrame
-print("\n--- DataFrame 'df_ihh' ---")
-df_ihh = ihh_por_ano.to_frame()
-print(df_ihh)
+# --- IHH CONTRIBUIÇÃO (Por País/Ano) ---
+df_ihh_exportadores_contribuicao = df_calc['IHH_EXPORTADORES_CONTRIBUICAO'].unstack('periodo')
+df_ihh_importadores_contribuicao = df_calc['IHH_IMPORTADORES_CONTRIBUICAO'].unstack('periodo')
+
+# --- IHH TOTAL ANUAL ---
+df_ihh_exportadores_total = ihh_exportadores_por_ano.to_frame()
+df_ihh_importadores_total = ihh_importadores_por_ano.to_frame()
+
+# --- NOVO: IHH TOTAL DO PERÍODO (Soma da Contribuição por País) ---
+df_ihh_soma_periodo_export = ihh_total_periodo_export.to_frame()
+df_ihh_soma_periodo_import = ihh_total_periodo_import.to_frame()
 
 
 print("\n\nCálculos concluídos. Preparando para salvar em Excel...")
@@ -336,7 +377,7 @@ print("\n\nCálculos concluídos. Preparando para salvar em Excel...")
 # --- 9. SALVAR OS RESULTADOS EM ARQUIVO EXCEL ---
 
 # Define o nome do arquivo Excel de saída
-nome_arquivo_excel = "analise_indices_cacau.xlsx"
+nome_arquivo_excel = "analise_indices_cacau_completo.xlsx"
 
 # Define um formato de string para alta precisão 
 formato_precisao_total = "%.5f"
@@ -344,27 +385,30 @@ formato_precisao_total = "%.5f"
 
 # Cria o "escritor" de Excel usando o context manager
 with pd.ExcelWriter(nome_arquivo_excel, engine='openpyxl') as writer:
-    
-    # Escreve cada DataFrame em uma aba (sheet) diferente
-    # Adicionamos o 'float_format' para evitar arredondamento VISUAL no Excel
-    
-    df_vcr.to_excel(writer, sheet_name='VCR', 
-                    float_format=formato_precisao_total)
-                    
-    df_vcrs.to_excel(writer, sheet_name='VCRS', 
-                     float_format=formato_precisao_total)
-                     
-    df_nei.to_excel(writer, sheet_name='NEI', 
-                    float_format=formato_precisao_total)
-                     
-    df_cagr.to_excel(writer, sheet_name='CAGR', 
-                     float_format=formato_precisao_total)
-                     
-    df_ihh.to_excel(writer, sheet_name='IHH', 
-                    float_format=formato_precisao_total)
+
+    # Índices VCR, VCRS, NEI, CAGR
+    df_vcr.to_excel(writer, sheet_name='VCR', float_format=formato_precisao_total) 
+    df_vcrs.to_excel(writer, sheet_name='VCRS', float_format=formato_precisao_total) 
+    df_nei.to_excel(writer, sheet_name='NEI', float_format=formato_precisao_total) 
+    df_cagr.to_excel(writer, sheet_name='CAGR', float_format=formato_precisao_total)
+
+    # IHH - Exportadores
+    df_ihh_exportadores_contribuicao.to_excel(writer, sheet_name='IHH_EXPORT_PAIS', float_format=formato_precisao_total)
+    df_ihh_exportadores_total.to_excel(writer, sheet_name='IHH_EXPORT_TOTAL_ANUAL', float_format=formato_precisao_total)
+
+    # IHH - Importadores
+    df_ihh_importadores_contribuicao.to_excel(writer, sheet_name='IHH_IMPORT_PAIS', float_format=formato_precisao_total)
+    df_ihh_importadores_total.to_excel(writer, sheet_name='IHH_IMPORT_TOTAL_ANUAL', float_format=formato_precisao_total)
+
+    # IHH Total do Período (Soma da Contribuição por País)
+    df_ihh_soma_periodo_export.to_excel(writer, sheet_name='IHH_SOMA_PERIODO_EXPORT', float_format=formato_precisao_total)
+    df_ihh_soma_periodo_import.to_excel(writer, sheet_name='IHH_SOMA_PERIODO_IMPORT', float_format=formato_precisao_total)
+
 
 print("\n\n" + "="*50)
-print(f"SUCESSO! Os 5 DataFrames foram salvos em:")
+print(f"SUCESSO! Todos os DataFrames foram salvos em:")
 print(f"'{nome_arquivo_excel}'")
-print("Cada índice está em uma aba separada e com precisão total.")
+print("Novas abas adicionadas com a SOMA da Contribuição IHH por país no período:")
+print("- 'IHH_SOMA_PERIODO_EXPORT'")
+print("- 'IHH_SOMA_PERIODO_IMPORT'")
 print("="*50)
