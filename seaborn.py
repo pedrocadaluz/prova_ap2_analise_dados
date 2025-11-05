@@ -15,4 +15,4 @@ sns.heatmap(df_corr, annot=True)
 sns.lineplot(data=df, x="day", y="tip")
 
 sns.barplot(data = df, x = "day", y = "tip")
-sns.countplot(data = df, x = "day", hue = "sex")
+sns.countplot(data = df, x = "day", hue = "sex")        
