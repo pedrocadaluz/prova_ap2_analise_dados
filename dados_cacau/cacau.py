@@ -256,9 +256,19 @@ df_ihh_import_combinado = combine_hhi_sheets(
 )
 
 
+#Planilha para o Kaplan Maier
+
+
+
+#Planilha para calcular a regressão
+
+
+
+
+
 # --- 8. SALVAR OS RESULTADOS EM ARQUIVO EXCEL ---
 
-nome_arquivo_excel = "analise_indece_cacau.xlsx"
+nome_arquivo_excel = "analise_indices_cacau.xlsx"
 formato_precisao_total = "%.5f"
 
 try:
